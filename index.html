@@ -14,10 +14,10 @@
     html, body {
       height: 100%;
       width: 100%;
-      background: #000;
-      font-family: sans-serif;
-      color: #fff;
       overflow: hidden;
+      font-family: sans-serif;
+      background: #000;
+      color: #fff;
     }
 
     .container {
@@ -68,20 +68,19 @@
 
     .main {
       flex-grow: 1;
-      overflow: auto;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      overflow: hidden;
+      position: relative;
     }
 
     .main img {
-      max-width: 100%;
-      max-height: 100%;
+      max-width: 95%;
+      max-height: 95%;
       border-radius: 8px;
       box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-      transition: opacity 0.6s ease;
-      opacity: 1;
+      transition: opacity 0.5s ease;
     }
 
     .main img.fade-out {
@@ -114,8 +113,8 @@
 <body>
   <div class="container">
     <div class="sidebar" id="sidebar"></div>
-    <div class="main">
-      <img id="mainImage" src="images/path_overview.jpg" alt="Slide">
+    <div class="main" id="mainArea">
+      <img id="mainImage" src="" alt="Slide">
     </div>
   </div>
 
@@ -142,52 +141,83 @@
     const mainImage = document.getElementById('mainImage');
     let activeIndex = 0;
 
-    function updateMainImage(index) {
-      if (index === activeIndex) return;
-
-      mainImage.classList.add('fade-out');
-      setTimeout(() => {
-        mainImage.src = `images/${imageFiles[index]}`;
-        mainImage.alt = `Slide ${index + 1}`;
-        mainImage.classList.remove('fade-out');
-      }, 300);
-
-      document.querySelectorAll('.thumbnail img').forEach((img, i) => {
-        img.classList.toggle('active', i === index);
-      });
-
-      activeIndex = index;
-    }
-
+    // Load all thumbnails and labels
     imageFiles.forEach((filename, index) => {
-      const thumbWrapper = document.createElement('div');
-      thumbWrapper.className = 'thumbnail';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'thumbnail';
 
       const thumb = document.createElement('img');
       thumb.src = `images/${filename}`;
-      thumb.alt = `Thumb ${index + 1}`;
+      thumb.alt = filename;
+      thumb.dataset.index = index;
       if (index === 0) thumb.classList.add('active');
-      thumb.onclick = () => updateMainImage(index);
+      thumb.onclick = () => {
+        activeIndex = index;
+        updateMainImage();
+      };
 
       const label = document.createElement('div');
       label.className = 'thumb-label';
       label.innerText = filename;
 
-      thumbWrapper.appendChild(thumb);
-      thumbWrapper.appendChild(label);
-      sidebar.appendChild(thumbWrapper);
+      wrapper.appendChild(thumb);
+      wrapper.appendChild(label);
+      sidebar.appendChild(wrapper);
     });
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight') {
+    function updateMainImage() {
+      mainImage.classList.add('fade-out');
+      setTimeout(() => {
+        mainImage.src = `images/${imageFiles[activeIndex]}`;
+        mainImage.alt = imageFiles[activeIndex];
+        mainImage.classList.remove('fade-out');
+      }, 200);
+
+      // Update active thumbnail
+      document.querySelectorAll('.sidebar img').forEach((img, i) => {
+        img.classList.toggle('active', parseInt(img.dataset.index) === activeIndex);
+      });
+    }
+
+    // Scroll (wheel) support
+    document.getElementById('mainArea').addEventListener('wheel', e => {
+      if (e.deltaY > 0) {
         activeIndex = (activeIndex + 1) % imageFiles.length;
-        updateMainImage(activeIndex);
-      }
-      if (e.key === 'ArrowLeft') {
+      } else {
         activeIndex = (activeIndex - 1 + imageFiles.length) % imageFiles.length;
-        updateMainImage(activeIndex);
       }
+      updateMainImage();
     });
+
+    // Touch swipe support
+    let yStart = null;
+    const mainArea = document.getElementById('mainArea');
+
+    mainArea.addEventListener('touchstart', e => {
+      yStart = e.touches[0].clientY;
+    });
+
+    mainArea.addEventListener('touchend', e => {
+      if (!yStart) return;
+      const yEnd = e.changedTouches[0].clientY;
+      const yDiff = yStart - yEnd;
+
+      if (Math.abs(yDiff) > 30) {
+        if (yDiff > 0) {
+          // swipe up
+          activeIndex = (activeIndex + 1) % imageFiles.length;
+        } else {
+          // swipe down
+          activeIndex = (activeIndex - 1 + imageFiles.length) % imageFiles.length;
+        }
+        updateMainImage();
+      }
+
+      yStart = null;
+    });
+
+    // Load first image on page load
+    updateMainImage();
   </script>
 </body>
 </html>
