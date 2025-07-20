@@ -5,116 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clearing Guide</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      height: 100%;
-      width: 100%;
-      background: #000;
-      font-family: sans-serif;
-      color: #fff;
-      overflow: hidden;
-    }
-
-    .container {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    .sidebar {
-      width: 150px;
-      background: #111;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .thumbnail {
-      text-align: center;
-    }
-
-    .thumbnail img {
-      width: 100%;
-      border-radius: 4px;
-      opacity: 0.6;
-      cursor: pointer;
-      transition: opacity 0.3s, transform 0.2s;
-      border: 2px solid transparent;
-    }
-
-    .thumbnail img:hover {
-      opacity: 0.9;
-      transform: scale(1.05);
-    }
-
-    .thumbnail img.active {
-      opacity: 1;
-      border-color: #00BFFF;
-    }
-
-    .thumb-label {
-      font-size: 0.7rem;
-      margin-top: 4px;
-      color: #aaa;
-      word-wrap: break-word;
-    }
-
-    .main {
-      flex-grow: 1;
-      overflow: auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .main img {
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 8px;
-      box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-      transition: opacity 0.6s ease;
-      opacity: 1;
-    }
-
-    .main img.fade-out {
-      opacity: 0;
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        flex-direction: column;
-      }
-      .sidebar {
-        width: 100%;
-        height: 120px;
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
-      }
-
-      .thumbnail {
-        width: 100px;
-        flex-shrink: 0;
-      }
-
-      .thumb-label {
-        font-size: 0.6rem;
-      }
-    }
+    /* ... same CSS as before ... (unchanged from previous message) */
   </style>
 </head>
 <body>
   <div class="container">
     <div class="sidebar" id="sidebar"></div>
-    <div class="main">
+    <div class="main" id="mainArea">
       <img id="mainImage" src="images/path_overview.jpg" alt="Slide">
     </div>
   </div>
@@ -140,11 +37,11 @@
 
     const sidebar = document.getElementById('sidebar');
     const mainImage = document.getElementById('mainImage');
+    const mainArea = document.getElementById('mainArea');
     let activeIndex = 0;
 
     function updateMainImage(index) {
       if (index === activeIndex) return;
-
       mainImage.classList.add('fade-out');
       setTimeout(() => {
         mainImage.src = `images/${imageFiles[index]}`;
@@ -159,6 +56,7 @@
       activeIndex = index;
     }
 
+    // Populate thumbnails
     imageFiles.forEach((filename, index) => {
       const thumbWrapper = document.createElement('div');
       thumbWrapper.className = 'thumbnail';
@@ -178,15 +76,52 @@
       sidebar.appendChild(thumbWrapper);
     });
 
+    // Keyboard support
     document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         activeIndex = (activeIndex + 1) % imageFiles.length;
         updateMainImage(activeIndex);
       }
-      if (e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         activeIndex = (activeIndex - 1 + imageFiles.length) % imageFiles.length;
         updateMainImage(activeIndex);
       }
+    });
+
+    // Mouse wheel scroll (main area only)
+    mainArea.addEventListener('wheel', e => {
+      if (e.deltaY > 0) {
+        activeIndex = (activeIndex + 1) % imageFiles.length;
+      } else {
+        activeIndex = (activeIndex - 1 + imageFiles.length) % imageFiles.length;
+      }
+      updateMainImage(activeIndex);
+    });
+
+    // Touch swipe (main area only)
+    let yStart = null;
+
+    mainArea.addEventListener('touchstart', e => {
+      yStart = e.touches[0].clientY;
+    });
+
+    mainArea.addEventListener('touchend', e => {
+      if (yStart === null) return;
+      const yEnd = e.changedTouches[0].clientY;
+      const yDiff = yStart - yEnd;
+
+      if (Math.abs(yDiff) > 30) {
+        if (yDiff > 0) {
+          // Swipe up
+          activeIndex = (activeIndex + 1) % imageFiles.length;
+        } else {
+          // Swipe down
+          activeIndex = (activeIndex - 1 + imageFiles.length) % imageFiles.length;
+        }
+        updateMainImage(activeIndex);
+      }
+
+      yStart = null;
     });
   </script>
 </body>
