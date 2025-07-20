@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Story</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    .slideshow-container {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    img {
+      max-height: 95vh;
+      max-width: 95vw;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+      transition: opacity 0.4s ease;
+    }
+
+    .nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding: 10px 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .nav:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    #prev { left: 20px; }
+    #next { right: 20px; }
+  </style>
+</head>
+<body>
+  <div class="slideshow-container">
+    <span class="nav" id="prev">&#8592;</span>
+    <img id="slideshow" src="images/01.jpg" alt="Slide 1">
+    <span class="nav" id="next">&#8594;</span>
+  </div>
+
+  <script>
+    const images = [
+      "images/01.jpg",
+      "images/02.jpg",
+      "images/03.jpg",
+      "images/04.jpg"
+      // Add more images in order
+    ];
+
+    let index = 0;
+    const slideshow = document.getElementById('slideshow');
+    const prev = document.getElementById('prev');
+    const next = document.getElementById('next');
+
+    function updateImage() {
+      slideshow.style.opacity = 0;
+      setTimeout(() => {
+        slideshow.src = images[index];
+        slideshow.alt = `Slide ${index + 1}`;
+        slideshow.style.opacity = 1;
+      }, 200);
+    }
+
+    prev.onclick = () => {
+      index = (index - 1 + images.length) % images.length;
+      updateImage();
+    };
+
+    next.onclick = () => {
+      index = (index + 1) % images.length;
+      updateImage();
+    };
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') next.click();
+      if (e.key === 'ArrowLeft') prev.click();
+    });
+
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchend', handleTouchEnd, false);
+
+    let xDown = null;
+
+    function handleTouchStart(evt) {
+      xDown = evt.touches[0].clientX;
+    }
+
+    function handleTouchEnd(evt) {
+      if (!xDown) return;
+      let xUp = evt.changedTouches[0].clientX;
+      let xDiff = xDown - xUp;
+
+      if (xDiff > 30) next.click();
+      else if (xDiff < -30) prev.click();
+
+      xDown = null;
+    }
+  </script>
+</body>
+</html>
