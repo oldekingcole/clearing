@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Image Story Viewer</title>
+  <title>Clearing Guide</title>
   <style>
     * {
       margin: 0;
@@ -17,26 +17,30 @@
       background: #000;
       font-family: sans-serif;
       color: #fff;
+      overflow: hidden;
     }
 
     .container {
       display: flex;
       height: 100vh;
       width: 100vw;
-      overflow: hidden;
     }
 
     .sidebar {
-      width: 120px;
+      width: 150px;
       background: #111;
       overflow-y: auto;
       padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .sidebar img {
+    .thumbnail {
+      text-align: center;
+    }
+
+    .thumbnail img {
       width: 100%;
       border-radius: 4px;
       opacity: 0.6;
@@ -45,30 +49,43 @@
       border: 2px solid transparent;
     }
 
-    .sidebar img:hover {
+    .thumbnail img:hover {
       opacity: 0.9;
       transform: scale(1.05);
     }
 
-    .sidebar img.active {
+    .thumbnail img.active {
       opacity: 1;
       border-color: #00BFFF;
     }
 
+    .thumb-label {
+      font-size: 0.7rem;
+      margin-top: 4px;
+      color: #aaa;
+      word-wrap: break-word;
+    }
+
     .main {
       flex-grow: 1;
+      overflow: auto;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      padding: 20px;
     }
 
     .main img {
-      max-width: 95%;
-      max-height: 95%;
+      max-width: 100%;
+      max-height: 100%;
       border-radius: 8px;
       box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-      transition: opacity 0.4s ease;
+      transition: opacity 0.6s ease;
+      opacity: 1;
+    }
+
+    .main img.fade-out {
+      opacity: 0;
     }
 
     @media (max-width: 600px) {
@@ -77,10 +94,19 @@
       }
       .sidebar {
         width: 100%;
-        height: 100px;
+        height: 120px;
         flex-direction: row;
         overflow-x: auto;
         overflow-y: hidden;
+      }
+
+      .thumbnail {
+        width: 100px;
+        flex-shrink: 0;
+      }
+
+      .thumb-label {
+        font-size: 0.6rem;
       }
     }
   </style>
@@ -117,29 +143,41 @@
     let activeIndex = 0;
 
     function updateMainImage(index) {
-      mainImage.style.opacity = 0;
+      if (index === activeIndex) return;
+
+      mainImage.classList.add('fade-out');
       setTimeout(() => {
         mainImage.src = `images/${imageFiles[index]}`;
         mainImage.alt = `Slide ${index + 1}`;
-        mainImage.style.opacity = 1;
-      }, 200);
-      document.querySelectorAll('.sidebar img').forEach((img, i) => {
+        mainImage.classList.remove('fade-out');
+      }, 300);
+
+      document.querySelectorAll('.thumbnail img').forEach((img, i) => {
         img.classList.toggle('active', i === index);
       });
+
       activeIndex = index;
     }
 
-    // Create thumbnail elements
     imageFiles.forEach((filename, index) => {
+      const thumbWrapper = document.createElement('div');
+      thumbWrapper.className = 'thumbnail';
+
       const thumb = document.createElement('img');
       thumb.src = `images/${filename}`;
       thumb.alt = `Thumb ${index + 1}`;
       if (index === 0) thumb.classList.add('active');
       thumb.onclick = () => updateMainImage(index);
-      sidebar.appendChild(thumb);
+
+      const label = document.createElement('div');
+      label.className = 'thumb-label';
+      label.innerText = filename;
+
+      thumbWrapper.appendChild(thumb);
+      thumbWrapper.appendChild(label);
+      sidebar.appendChild(thumbWrapper);
     });
 
-    // Keyboard navigation
     document.addEventListener('keydown', e => {
       if (e.key === 'ArrowRight') {
         activeIndex = (activeIndex + 1) % imageFiles.length;
